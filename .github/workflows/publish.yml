@@ -27,15 +27,19 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          # npm 11.5+ is required for Trusted Publishing (OIDC exchange
-          # with the npm registry). Node 22 ships that version; Node 20
-          # ships npm 10.x which doesn't support it.
           node-version: 22
           cache: pnpm
           # NOTE: no `registry-url` — setting it makes setup-node write an
           # .npmrc that authenticates with `${{ github.token }}` (useless
           # for npm) and npm CLI prefers that token over OIDC, causing a
           # 404. Trusted Publishing does its own registry-URL resolution.
+
+      - name: Upgrade npm to a version that supports Trusted Publishing
+        # Node 22 LTS ships npm 10.x; Trusted Publishing (OIDC-based
+        # token-less publish) was added in npm 11.5. Without this bump,
+        # `npm publish` silently skips the OIDC handshake and the publish
+        # fails (anonymous PUT → 404).
+        run: npm install --global npm@latest
 
       - name: Install
         run: pnpm install --frozen-lockfile
