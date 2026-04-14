@@ -1,0 +1,64 @@
+name: Publish to npm
+
+# Tag-triggered: push a `v*` tag (e.g. `v1.0.0`) and CI publishes that
+# version to npm. Use `npm version patch|minor|major` locally — it bumps
+# package.json, commits, and tags in one shot; then `git push --follow-tags`.
+on:
+  push:
+    tags: ["v*"]
+
+# `id-token: write` is required for npm provenance (OIDC-signed supply-chain
+# attestation). `contents: read` is the default minimum for checkout.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Same safety net as test.yml — don't publish broken code.
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type-check
+        run: npx tsc -p tsconfig.json
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Verify tag matches package version
+        # Catches the mistake of pushing `v1.0.1` when package.json still
+        # says 1.0.0 — npm would happily re-publish 1.0.0 and collide.
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag v$TAG does not match package.json version $PKG"
+            exit 1
+          fi
+
+      - name: Publish to npm
+        # `prepack` rebuilds dist automatically before the tarball is created.
+        # `--provenance` attaches an OIDC-signed attestation (shows a
+        # "Provenance" badge on npmjs.com).
+        run: npm publish --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

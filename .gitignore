@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+
+# Build
+dist
+
+# Next.js dev cache
+src/next-app/.next
+
+# Files the shell CLI rewrites every boot
+src/next-app/.*-mode
+src/next-app/app/_user-sources.css
+src/next-app/app/_user-global.css
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Test output
+test-results
+playwright-report
+coverage
+.eslintcache
+
+# npm pack output
+*.tgz
+
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea

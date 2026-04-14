@@ -1,0 +1,222 @@
+"use client"
+
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { useEffect, useRef } from "react"
+import { useIsMobile } from "@shell/hooks/use-mobile"
+import { BookOpen, Component, Blocks } from "lucide-react"
+import type { DocMeta } from "@shell/lib/docs"
+import type { ComponentMeta } from "@shell/lib/components-nav"
+import { useTranslations, useLocale } from "@shell/lib/i18n"
+import { Backdrop } from "@shell/components/shell-ui/backdrop"
+
+import type { ActiveSection } from "@shell/hooks/use-active-section"
+
+interface SidebarProps {
+  docs: DocMeta[]
+  components: ComponentMeta[]
+  open?: boolean
+  onClose?: () => void
+  collapsed?: boolean
+  /** When set, desktop views show only this section. Mobile always shows all three. */
+  activeSection?: ActiveSection
+  /**
+   * Which viewport variants of the sidebar to render.
+   * - `"all"` (default): mobile floating card + desktop inline + desktop floating (current behavior).
+   * - `"mobile"`: only the mobile floating card + backdrop. Used by the root layout so the
+   *   hamburger menu works on every page (including the homepage), without injecting a
+   *   desktop sidebar on pages that don't have one.
+   * - `"desktop"`: only the desktop inline + desktop floating card. Used by `SidebarLayout`
+   *   so the per-section docs/components pages still get their desktop nav, while the
+   *   root layout owns the mobile variant.
+   */
+  display?: "all" | "mobile" | "desktop"
+}
+
+export function Sidebar({ docs, components, open, onClose, collapsed, activeSection, display = "all" }: SidebarProps) {
+  const pathname = usePathname()
+  const t = useTranslations()
+  const { locale } = useLocale()
+
+  const isMobile = useIsMobile()
+  const uiComponents = components.filter((c) => c.kind === "component")
+  const blocks = components.filter((c) => c.kind === "block")
+
+  // Close floating nav on mobile navigation only
+  const isMobileRef = useRef(isMobile)
+  isMobileRef.current = isMobile
+  const mountedRef = useRef(false)
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return }
+    if (isMobileRef.current) onClose?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only trigger on pathname change
+  }, [pathname])
+
+  const docsSection = (
+    <SidebarSection icon={BookOpen} title={t("sidebar.documentation")}>
+      {docs.map((doc) => (
+        <SidebarLink
+          key={doc.slug}
+          href={`/docs/${doc.slug}`}
+          active={pathname === `/docs/${doc.slug}`}
+        >
+          {doc.titles?.[locale] ?? doc.title}
+        </SidebarLink>
+      ))}
+    </SidebarSection>
+  )
+
+  const componentsSection = (
+    <SidebarSection icon={Component} title={t("sidebar.components")}>
+      {uiComponents.map((comp) => (
+        <SidebarLink
+          key={comp.name}
+          href={`/components/${comp.name}`}
+          active={pathname === `/components/${comp.name}`}
+        >
+          {comp.label}
+        </SidebarLink>
+      ))}
+    </SidebarSection>
+  )
+
+  const blocksSection = blocks.length > 0 ? (
+    <SidebarSection icon={Blocks} title={t("sidebar.blocks")}>
+      {blocks.map((comp) => (
+        <SidebarLink
+          key={comp.name}
+          href={`/components/${comp.name}`}
+          active={pathname === `/components/${comp.name}`}
+        >
+          {comp.label}
+        </SidebarLink>
+      ))}
+    </SidebarSection>
+  ) : null
+
+  // Mobile: always show all three sections (no topbar tabs on mobile)
+  const mobileNavContent = (
+    <nav aria-label="Main navigation" className="p-4 space-y-4">
+      {docsSection}
+      {componentsSection}
+      {blocksSection}
+    </nav>
+  )
+
+  // Desktop: show only the active section (topbar tabs handle section switching)
+  const desktopNavContent = (
+    <nav aria-label="Main navigation" className="p-4 space-y-4">
+      {activeSection === "docs" && docsSection}
+      {activeSection === "components" && componentsSection}
+      {activeSection === "blocks" && blocksSection}
+      {/* Fallback: when we can't determine a section, show all */}
+      {activeSection === null && (
+        <>
+          {docsSection}
+          {componentsSection}
+          {blocksSection}
+        </>
+      )}
+    </nav>
+  )
+
+  const showMobile = display === "all" || display === "mobile"
+  const showDesktop = display === "all" || display === "desktop"
+
+  return (
+    <>
+      {/* Backdrop — mobile nav only (no backdrop in desktop fullscreen) */}
+      {showMobile && open && !collapsed && (
+        <Backdrop
+          belowHeader
+          className="md:hidden"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Mobile floating card — mobile only */}
+      {showMobile && (
+        <aside
+          className={`
+            md:hidden fixed top-18 left-4 z-50 w-64 rounded-lg border border-border bg-background shadow-xl overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out motion-reduce:transition-none
+            ${open ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}
+          `}
+          style={{ maxHeight: "calc(100vh - 6rem)" }}
+        >
+          {mobileNavContent}
+        </aside>
+      )}
+
+      {/* Desktop floating card — only meaningful on component pages where the
+          user can enter fullscreen preview mode. On other sections the
+          fullscreen state is moot and the floating card just looks out of
+          place; skip rendering it entirely. */}
+      {showDesktop &&
+        (activeSection === "components" || activeSection === "blocks") && (
+          <aside
+            className={`
+            hidden md:block fixed top-18 left-4 z-50 w-64 rounded-lg border border-border bg-background shadow-xl overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out motion-reduce:transition-none
+            ${open && collapsed ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none"}
+          `}
+            style={{ maxHeight: "calc(100vh - 6rem)" }}
+          >
+            {desktopNavContent}
+          </aside>
+        )}
+
+      {/* Desktop inline sidebar — only when not collapsed */}
+      {showDesktop && !collapsed && (
+        <aside
+          className="hidden md:block w-64 border-r border-border bg-background h-[calc(100vh-3.5rem)] overflow-y-auto overflow-x-hidden sticky top-14 shrink-0"
+        >
+          {desktopNavContent}
+        </aside>
+      )}
+    </>
+  )
+}
+
+function SidebarSection({
+  icon: Icon,
+  title,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  children: React.ReactNode
+}) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+        <Icon className="size-4" />
+        <span className="flex-1 text-left">{title}</span>
+      </div>
+      <ul className="space-y-1">{children}</ul>
+    </div>
+  )
+}
+
+function SidebarLink({
+  href,
+  active,
+  children,
+}: {
+  href: string
+  active: boolean
+  children: React.ReactNode
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className={`block text-sm px-2 py-1.5 rounded-md transition-colors ${
+          active
+            ? "bg-accent text-accent-foreground font-medium"
+            : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+        }`}
+      >
+        {children}
+      </Link>
+    </li>
+  )
+}

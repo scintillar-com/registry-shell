@@ -1,0 +1,11 @@
+{
+  "name": "minimal-registry",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "shell": "registry-shell dev"
+  },
+  "devDependencies": {
+    "@sntlr/registry-shell": "workspace:*"
+  }
+}
