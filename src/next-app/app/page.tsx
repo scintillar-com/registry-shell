@@ -1,5 +1,5 @@
 import { getAllDocs } from "@shell/lib/docs"
-import HomePage from "@user/homepage"
+import HomePage from "@shell/components/homepage"
 
 export default function Home() {
   const docs = getAllDocs()

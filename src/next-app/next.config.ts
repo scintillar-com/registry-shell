@@ -44,9 +44,6 @@ function resolveUserModule(relativePath: string, fallback: string): string {
 }
 
 const USER_PREVIEWS = resolveUserModule("components/previews", "fallback/previews.ts")
-const USER_HOMEPAGE = process.env.USER_HOMEPAGE_PATH
-  ? resolveUserModule(process.env.USER_HOMEPAGE_PATH, "fallback/homepage.tsx")
-  : toPosix(path.join(HERE, "fallback/homepage.tsx"))
 
 // The CLI's `build` / `start` commands set USER_DIST_DIR to
 // `<user-project>/.next` so Next writes its output (and reads it back on
@@ -79,7 +76,6 @@ const nextConfig: NextConfig = {
       : toPosix(findCommonRoot(HERE, USER_ROOT ?? process.cwd())),
     resolveAlias: {
       "@user/previews": USER_PREVIEWS,
-      "@user/homepage": USER_HOMEPAGE,
     },
   },
 
@@ -88,7 +84,6 @@ const nextConfig: NextConfig = {
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
       "@user/previews": USER_PREVIEWS,
-      "@user/homepage": USER_HOMEPAGE,
       // Shell's internal alias — its own files.
       "@shell": toPosix(HERE),
       // shadcn convention: user files use `@/` for their own project root.

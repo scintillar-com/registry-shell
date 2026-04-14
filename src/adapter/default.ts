@@ -3,9 +3,9 @@
  *
  * Builds a RegistryAdapter from a `ResolvedShellConfig`: scans the filesystem
  * paths declared in the user's config, parses MDX frontmatter, and reads
- * registry JSON. The `previewLoader` and `homePage` are wired separately via
- * Next.js aliases (see next-app/next.config.ts) because Next's `dynamic()`
- * needs string literal imports.
+ * registry JSON. The `previewLoader` is wired separately via a Next.js alias
+ * (see next-app/next.config.ts) because Next's `dynamic()` needs string
+ * literal imports.
  */
 import "server-only"
 import fs from "node:fs"

@@ -196,9 +196,6 @@ export function writeUserSourcesCss(loaded: LoadedConfig | null): void {
     sources.push(
       `@source "${rel(resolve(paths.previews?.replace(/\/index\.[tj]sx?$/, ""), "components/previews"))}";`,
     )
-    if (loaded.config.homePage) {
-      sources.push(`@source "${rel(resolve(loaded.config.homePage, ""))}";`)
-    }
   }
   fs.writeFileSync(sourcesTarget, sources.join("\n") + "\n", "utf-8")
 
@@ -285,7 +282,6 @@ export function buildEnvVars(loaded: LoadedConfig | null): Record<string, string
   if (b.faviconLight) env.NEXT_PUBLIC_SHELL_FAVICON_LIGHT = b.faviconLight
   if (b.faviconIco) env.NEXT_PUBLIC_SHELL_FAVICON_ICO = b.faviconIco
 
-  if (config.homePage) env.USER_HOMEPAGE_PATH = config.homePage
   if (config.installCommandTemplate !== undefined) {
     env.NEXT_PUBLIC_SHELL_INSTALL_CMD = config.installCommandTemplate
   }

@@ -8,10 +8,3 @@ declare module "@user/previews" {
   import type { PreviewLoader } from "@shell/lib/registry-adapter"
   export const previewLoader: PreviewLoader
 }
-
-declare module "@user/homepage" {
-  import type { ComponentType } from "react"
-  import type { HomePageProps } from "@shell/lib/registry-adapter"
-  const HomePage: ComponentType<HomePageProps>
-  export default HomePage
-}

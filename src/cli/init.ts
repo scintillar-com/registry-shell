@@ -28,9 +28,6 @@ export default defineConfig({
   //   // your :root { --primary: ... } wins the cascade.
   //   // globalCss: "./styles/theme.css",
   // },
-
-  // Custom homepage component (optional):
-  // homePage: "./components/homepage",
 })
 `
 

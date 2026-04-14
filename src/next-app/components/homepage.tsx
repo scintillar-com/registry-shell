@@ -1,6 +1,5 @@
 /**
- * Fallback homepage rendered at `/` when the user's config has no custom
- * `homePage`. Two states:
+ * The shell's homepage rendered at `/`. Two states:
  *   - Registry has content → generic index listing components/blocks/docs.
  *   - Registry empty / absent → terse "no registry wired" placeholder
  *     pointing at the shell's documentation site.
@@ -10,7 +9,7 @@ import { getAllComponents } from "@shell/lib/components-nav"
 import { getAllDocs } from "@shell/lib/docs"
 import type { HomePageProps } from "@shell/lib/registry-adapter"
 
-export default function FallbackHomePage({ firstDocSlug }: HomePageProps) {
+export default function HomePage({ firstDocSlug }: HomePageProps) {
   const items = getAllComponents()
   const docs = getAllDocs()
 

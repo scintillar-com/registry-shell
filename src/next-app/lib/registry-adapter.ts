@@ -54,7 +54,7 @@ export interface PreviewLoader {
   load(name: string): ComponentType | null
 }
 
-/** Props the shell passes to an optional custom `HomePage` component. */
+/** Props the shell passes to the built-in homepage component. */
 export interface HomePageProps {
   /** Slug of the first doc (lowest `order`), so the homepage can link to it. */
   firstDocSlug?: string
@@ -95,34 +95,6 @@ export interface BrandingConfig {
   faviconLight?: string
   /** Public path to a fallback `.ico` favicon. */
   faviconIco?: string
-}
-
-/**
- * Client-safe slice of a registry — bundles everything the shell renders in
- * the browser (without pulling in the server-only adapter that uses `fs`).
- * Wire this in `ui-registry/registry.client.ts`.
- *
- * A registry package typically exposes this via a `client.ts` module that
- * re-exports `branding`, `previewLoader`, a default `HomePage`, and optional
- * `extraTranslations`. See `sntlr-registry/client.ts` for a reference.
- */
-export interface RegistryClient {
-  branding: BrandingConfig
-  previewLoader: PreviewLoader
-  /**
-   * Optional custom homepage component. When set, the shell's `/` route
-   * renders this instead of the built-in Getting Started / generic index.
-   * When `undefined`/`null`, the shell uses `GenericIndexPage` (a plain
-   * component/block listing).
-   */
-  HomePage?: ComponentType<HomePageProps> | null
-  /**
-   * Locale → key → value dictionaries merged into the shell's i18n table.
-   * Use this to ship marketing/homepage copy; the shell owns the generic UI
-   * keys (sidebar, header, search, a11y, etc.). Invariant: if `HomePage` is
-   * set, this must include every key the homepage references.
-   */
-  extraTranslations?: Record<string, Record<string, string>>
 }
 
 /**
@@ -192,8 +164,10 @@ export interface RegistryAdapter {
   previewLoader: PreviewLoader
   branding: BrandingConfig
 
-  /** See `RegistryClient.HomePage`. */
-  homePage?: ComponentType<HomePageProps> | null
-  /** See `RegistryClient.extraTranslations`. */
+  /**
+   * Locale → key → value dictionaries merged into the shell's built-in
+   * i18n table. Use this to supply extra translations the registry's
+   * custom content references (chrome copy, doc-local keys, etc.).
+   */
   extraTranslations?: Record<string, Record<string, string>>
 }

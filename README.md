@@ -43,9 +43,6 @@ export default defineConfig({
   //   globalCss:    "./styles/theme.css",  // optional, see "Custom CSS"
   //   buildOutput:  ".next",                // optional, override if `.next` collides
   // },
-
-  // Optional custom homepage (relative to this file):
-  // homePage: "./components/homepage",
 })
 ```
 
@@ -69,8 +66,8 @@ location).
 
 Previews are imported from your project's `components/previews/index.ts` via
 a Next.js alias, so `next/dynamic()` with string-literal paths keeps working.
-A custom homepage module (if you set `homePage` in the config) is loaded the
-same way.
+The shell's `/` route always renders a built-in component/block listing —
+for a branded marketing landing, host it on a separate site.
 
 ## Commands
 
