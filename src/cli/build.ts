@@ -22,7 +22,9 @@ export async function run(args: string[]): Promise<void> {
   const loaded = loadUserConfig()
   clearStaleNextCacheIfModeChanged(loaded)
   writeUserSourcesCss(loaded)
-  const userDistDir = loaded ? path.resolve(loaded.root, ".next") : undefined
+  const userDistDir = loaded
+    ? path.resolve(loaded.root, loaded.config.paths?.buildOutput ?? ".next")
+    : undefined
   const env = {
     ...process.env,
     ...buildEnvVars(loaded),

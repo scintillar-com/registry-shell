@@ -10,7 +10,9 @@ import { NEXT_BIN, buildEnvVars, loadUserConfig, nextAppDir } from "./shared.js"
 
 export async function run(args: string[]): Promise<void> {
   const loaded = loadUserConfig()
-  const userDistDir = loaded ? path.resolve(loaded.root, ".next") : undefined
+  const userDistDir = loaded
+    ? path.resolve(loaded.root, loaded.config.paths?.buildOutput ?? ".next")
+    : undefined
   const env = {
     ...process.env,
     ...buildEnvVars(loaded),

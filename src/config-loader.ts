@@ -13,12 +13,14 @@ import fs from "node:fs"
 import { createJiti } from "jiti"
 import type { ShellConfig, ShellPaths, BrandingConfig } from "./define-config.js"
 
-// `skipBlocks` and `globalCss` are excluded from the "must have a default"
-// shape: skipBlocks is always an array (empty default); globalCss is purely
-// opt-in (no sensible default — users either set it or they don't).
-const DEFAULT_PATHS: Required<Omit<ShellPaths, "skipBlocks" | "globalCss">> & {
-  skipBlocks: string[]
-} = {
+// `skipBlocks`, `globalCss`, and `buildOutput` are excluded from the
+// "must have a default" shape: skipBlocks is always an array (empty
+// default); globalCss is purely opt-in; buildOutput is read by the CLI
+// directly (with its own `.next` default) and doesn't flow through the
+// server-side resolver.
+const DEFAULT_PATHS: Required<
+  Omit<ShellPaths, "skipBlocks" | "globalCss" | "buildOutput">
+> & { skipBlocks: string[] } = {
   components: "components/ui",
   blocks: "registry/new-york/blocks",
   previews: "components/previews/index.ts",

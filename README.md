@@ -41,6 +41,7 @@ export default defineConfig({
   //   docs:         "content/docs",
   //   registryJson: "public/r",
   //   globalCss:    "./styles/theme.css",  // optional, see "Custom CSS"
+  //   buildOutput:  ".next",                // optional, override if `.next` collides
   // },
 
   // Optional custom homepage (relative to this file):
@@ -171,6 +172,10 @@ self-hosted Node, etc.) finds it where they expect. On Vercel specifically:
 
 `registry-shell start` also respects the same output location, so
 self-hosted deployments work with `npm run shell:build && npm run shell:start`.
+
+Need the output somewhere other than `.next`? Set `paths.buildOutput` in
+your config (e.g. `"dist-shell"`). Just remember to point your host's
+Output Directory setting at the same path.
 
 ## Releasing
 
