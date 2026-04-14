@@ -98,9 +98,10 @@ export interface BrandingConfig {
 }
 
 /**
- * The complete server-side contract the shell consumes. A registry package
- * implements this (typically in `adapter.ts`) and the shell imports the
- * default export via `ui-registry/registry.config.ts`.
+ * The complete server-side contract the shell consumes. The default
+ * (convention-based) implementation lives in `src/adapter/default.ts`;
+ * registries can override specific methods via a custom adapter module
+ * pointed at by `adapter` in their `registry-shell.config.ts`.
  *
  * All filesystem reads, registry-JSON serving, and MDX parsing live here —
  * the shell never touches the registry's files directly. This is what makes
