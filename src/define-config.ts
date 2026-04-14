@@ -150,13 +150,6 @@ export interface ShellConfig {
   paths?: ShellPaths
 
   /**
-   * Optional. Path to a custom homepage module, relative to config dir.
-   * The module must default-export a React component accepting
-   * `{ firstDocSlug?: string }` props.
-   */
-  homePage?: string
-
-  /**
    * Optional. Locale → key → value dictionaries merged into the shell's
    * built-in i18n table. Use for marketing copy referenced by a custom
    * homepage.

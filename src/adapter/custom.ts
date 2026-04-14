@@ -29,7 +29,7 @@ import type { ResolvedShellConfig } from "../config-loader.js"
  * Shape of what a custom adapter module may override. Mirrors the public
  * methods on RegistryAdapter (defined inside next-app/lib) minus the fields
  * that are wired via other mechanisms (previewLoader via `@user/previews`
- * alias, branding from config, homePage via `@user/homepage` alias).
+ * alias, branding from config).
  *
  * Typed with `unknown` args on the server side — the Next app re-applies
  * its stricter RegistryAdapter types when consuming this.

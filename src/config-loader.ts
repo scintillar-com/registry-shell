@@ -62,8 +62,6 @@ export interface ResolvedShellConfig {
     /** Absolute path to user's extra global CSS, or null when not configured. */
     globalCss: string | null
   }
-  /** Absolute path to a custom homepage module, or null. */
-  homePage: string | null
   /** Absolute path to a custom adapter module, or null. */
   adapter: string | null
   extraTranslations: Record<string, Record<string, string>>
@@ -126,7 +124,6 @@ export function loadResolvedConfig(): ResolvedShellConfig | null {
       skipBlocks: new Set(cfgPaths.skipBlocks ?? []),
       globalCss: cfgPaths.globalCss ? path.resolve(rootAbs, cfgPaths.globalCss) : null,
     },
-    homePage: config.homePage ? path.resolve(rootAbs, config.homePage) : null,
     adapter: config.adapter ? path.resolve(rootAbs, config.adapter) : null,
     extraTranslations: config.extraTranslations ?? {},
     multilocale: Boolean(config.multilocale),
