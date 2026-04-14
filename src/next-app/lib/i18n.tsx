@@ -604,7 +604,8 @@ export function I18nProvider({
   const t = useCallback(
     (key: TranslationKey | (string & {})) => {
       const k = key as string
-      return merged[locale][k] ?? merged.en[k] ?? k
+      const dict = merged[locale as keyof typeof merged]
+      return dict?.[k] ?? merged.en[k] ?? k
     },
     [locale, merged]
   )

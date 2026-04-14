@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, useSyncExternalStore } from "react"
+import { useEffect, useRef, useSyncExternalStore } from "react"
 import { usePathname } from "next/navigation"
 
 // Simple external store for navigation state

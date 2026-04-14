@@ -48,8 +48,15 @@ const USER_HOMEPAGE = process.env.USER_HOMEPAGE_PATH
   ? resolveUserModule(process.env.USER_HOMEPAGE_PATH, "fallback/homepage.tsx")
   : toPosix(path.join(HERE, "fallback/homepage.tsx"))
 
+// The CLI's `build` / `start` commands set USER_DIST_DIR to
+// `<user-project>/.next` so Next writes its output (and reads it back on
+// start) at the user's project root, not inside node_modules. Absolute
+// path — Next accepts that for `distDir`.
+const USER_DIST_DIR = process.env.USER_DIST_DIR
+
 const nextConfig: NextConfig = {
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
+  ...(USER_DIST_DIR ? { distDir: toPosix(USER_DIST_DIR) } : {}),
 
   // When installed as an external package (link:../registry-shell, npm, etc.),
   // the shell's TSX lives under the user's node_modules and Next won't
