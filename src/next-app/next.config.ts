@@ -48,6 +48,14 @@ const USER_PREVIEWS = resolveUserModule("components/previews", "fallback/preview
 const nextConfig: NextConfig = {
   output: process.env.BUILD_STANDALONE === "true" ? "standalone" : undefined,
 
+  // Next's file tracer figures out which node_modules files each
+  // serverless function needs. With pnpm (and our setup, where Next
+  // runs from inside node_modules), the tracer can't walk pnpm's
+  // virtual store without knowing the real project root. Point it at
+  // the user's project — that's the dir that contains `node_modules/.pnpm`
+  // on Vercel and any other pnpm-installed host.
+  ...(USER_ROOT ? { outputFileTracingRoot: toPosix(USER_ROOT) } : {}),
+
   // When installed as an external package (link:../registry-shell, npm, etc.),
   // the shell's TSX lives under the user's node_modules and Next won't
   // transpile it by default. The registry can list additional packages via
