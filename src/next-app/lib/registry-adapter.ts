@@ -36,9 +36,9 @@ export interface DocContent {
 
 /**
  * Renders interactive component previews on the detail pages. The registry
- * owns the dynamic-import map (see `sntlr-registry/components/previews/index.ts`
- * for a reference implementation) because Next.js `dynamic()` needs string
- * literal paths at compile time.
+ * owns the dynamic-import map (the reference implementation lives at
+ * `components/previews/index.ts` in `@sntlr/registry`) because Next.js
+ * `dynamic()` needs string literal paths at compile time.
  */
 export interface PreviewLoader {
   /**

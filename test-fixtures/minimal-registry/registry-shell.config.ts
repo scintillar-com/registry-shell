@@ -3,7 +3,7 @@ import { defineConfig } from "@sntlr/registry-shell"
 /**
  * Smallest-viable registry used to smoke-test the shell. One component, one
  * doc, no homepage, no blocks. Proves the shell can host a registry that
- * isn't sntlr-registry.
+ * isn't `@sntlr/registry`.
  */
 export default defineConfig({
   branding: {

@@ -144,8 +144,8 @@ export interface ShellConfig {
   locales?: string[]
 
   /**
-   * Optional. Override filesystem layout. Defaults match the sntlr-registry
-   * convention.
+   * Optional. Override filesystem layout. Defaults match the shadcn
+   * registry convention used by `@sntlr/registry`.
    */
   paths?: ShellPaths
 
