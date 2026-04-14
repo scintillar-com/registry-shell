@@ -7,8 +7,8 @@ on:
   push:
     tags: ["v*"]
 
-# `id-token: write` is required for npm provenance (OIDC-signed supply-chain
-# attestation). `contents: read` is the default minimum for checkout.
+# `id-token: write` is required both for provenance and for npm Trusted
+# Publishing (OIDC). `contents: read` is the default minimum for checkout.
 permissions:
   contents: read
   id-token: write
@@ -27,7 +27,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # npm 11.5+ is required for Trusted Publishing (OIDC exchange
+          # with the npm registry). Node 22 ships that version; Node 20
+          # ships npm 10.x which doesn't support it.
+          node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
@@ -56,9 +59,11 @@ jobs:
           fi
 
       - name: Publish to npm
-        # `prepack` rebuilds dist automatically before the tarball is created.
-        # `--provenance` attaches an OIDC-signed attestation (shows a
-        # "Provenance" badge on npmjs.com).
+        # Trusted Publishing: no `NODE_AUTH_TOKEN`. npm CLI fetches the
+        # GitHub OIDC token from `id-token: write` above and exchanges
+        # it with the registry (the package must have a trusted
+        # publisher configured at npmjs.com pointing at this repo +
+        # workflow file). `prepack` rebuilds `dist/` before the
+        # tarball; `--provenance` is implicit with OIDC but kept
+        # explicit for clarity.
         run: npm publish --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
