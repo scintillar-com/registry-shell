@@ -32,7 +32,10 @@ jobs:
           # ships npm 10.x which doesn't support it.
           node-version: 22
           cache: pnpm
-          registry-url: https://registry.npmjs.org
+          # NOTE: no `registry-url` — setting it makes setup-node write an
+          # .npmrc that authenticates with `${{ github.token }}` (useless
+          # for npm) and npm CLI prefers that token over OIDC, causing a
+          # 404. Trusted Publishing does its own registry-URL resolution.
 
       - name: Install
         run: pnpm install --frozen-lockfile
