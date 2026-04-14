@@ -41,6 +41,7 @@ export default defineConfig({
   //   docs:         "content/docs",
   //   registryJson: "public/r",
   //   globalCss:    "./styles/theme.css",  // optional, see "Custom CSS"
+  //   buildOutput:  ".next",                // optional, override if `.next` collides
   // },
 
   // Optional custom homepage (relative to this file):
@@ -148,6 +149,33 @@ defaults.
 - Your project uses Next.js 15 conventions (or at least its `public/`,
   `components/`, `content/` layout — the shell doesn't care if you use
   Next.js itself).
+
+## Deploying to Vercel
+
+The shell's `registry-shell build` writes its Next.js output to
+`<your-project>/.next`, so any Next-aware host (Vercel, Netlify's Next runtime,
+self-hosted Node, etc.) finds it where they expect. On Vercel specifically:
+
+1. **Add `next` to your project's devDependencies.** Vercel auto-detects
+   Next.js by scanning `package.json`; without a direct `next` entry it may
+   miss the framework and default to static hosting.
+   ```bash
+   npm install -D next
+   ```
+2. **In the Vercel dashboard** (New Project → your repo), set:
+   - **Framework Preset**: Next.js
+   - **Build Command**: `npm run shell:build` (or `registry-shell build`)
+   - **Output Directory**: leave blank (defaults to `.next`)
+   - **Install Command**: leave default
+3. Deploy. Vercel runs your build command, Next writes `.next/` at the
+   project root, and Vercel picks it up like a standard Next.js project.
+
+`registry-shell start` also respects the same output location, so
+self-hosted deployments work with `npm run shell:build && npm run shell:start`.
+
+Need the output somewhere other than `.next`? Set `paths.buildOutput` in
+your config (e.g. `"dist-shell"`). Just remember to point your host's
+Output Directory setting at the same path.
 
 ## Releasing
 

@@ -122,7 +122,7 @@ export function TestInfo({ name }: { name: string }) {
                   <AccordionTrigger>
                     <div className="flex items-center gap-2">
                       <Icon className="size-4 text-muted-foreground" />
-                      <span>{t(`tests.${tf.type}` as any)}</span>
+                      <span>{t(`tests.${tf.type}` as string)}</span>
                       <Badge variant="outline" className="text-[10px]">{tf.tests.length}</Badge>
                     </div>
                   </AccordionTrigger>

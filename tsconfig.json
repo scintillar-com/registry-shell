@@ -15,7 +15,10 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./src/next-app/*"]
+      "@/*": ["./src/next-app/*"],
+      "@shell/*": ["./src/next-app/*"],
+      "@user/previews": ["./src/next-app/fallback/previews.ts"],
+      "@user/homepage": ["./src/next-app/fallback/homepage.tsx"]
     }
   },
   "include": [

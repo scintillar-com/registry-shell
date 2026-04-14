@@ -89,6 +89,17 @@ export interface ShellPaths {
    * Example: `globalCss: "./styles/theme.css"`.
    */
   globalCss?: string
+  /**
+   * Optional. Directory (relative to the config file) where
+   * `registry-shell build` writes Next's build output, and where
+   * `registry-shell start` reads it back from. Default: `.next`.
+   *
+   * Override only if `.next` collides with something else in your
+   * project. Most Next.js hosts (Vercel, Netlify, self-hosted)
+   * auto-detect `.next` — if you change this, update your host's
+   * "Output Directory" setting to match.
+   */
+  buildOutput?: string
 }
 
 /**

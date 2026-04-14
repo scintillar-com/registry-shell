@@ -6,43 +6,73 @@ on:
   pull_request:
     branches: [main]
 
-# Cancel superseded runs — no reason to finish testing a commit that's
-# already been pushed over on the same branch.
 concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
 
+# Four independent jobs run in parallel so the GitHub UI shows
+# pass/fail separately per check (Lint ✗ vs Type-check ✗ vs Build ✗ vs
+# Unit-tests ✗). Each job re-runs its own checkout + install; pnpm's
+# cached store keeps that overhead small (~10s on warm cache).
 jobs:
-  test:
-    name: Lint + type-check + build + unit tests
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10.28.0
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
 
-      - name: Install
-        run: pnpm install --frozen-lockfile
+  type-check:
+    name: Type-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Root tsconfig covers src/, next-app/, and playwright.config.ts.
+      # `noEmit: true` is set there, so this is pure type-checking.
+      - run: npx tsc -p tsconfig.json
 
-      - name: Lint
-        run: pnpm lint
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
 
-      - name: Type-check
-        # Root tsconfig covers src/ + next-app/ + playwright.config — broader
-        # than the CLI's tsconfig.cli.json. `noEmit: true` is already set.
-        run: npx tsc -p tsconfig.json
-
-      - name: Build CLI
-        run: pnpm build
-
-      - name: Unit tests
-        run: pnpm test
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
