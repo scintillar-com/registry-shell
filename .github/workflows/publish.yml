@@ -34,13 +34,6 @@ jobs:
           # for npm) and npm CLI prefers that token over OIDC, causing a
           # 404. Trusted Publishing does its own registry-URL resolution.
 
-      - name: Upgrade npm to a version that supports Trusted Publishing
-        # Node 22 LTS ships npm 10.x; Trusted Publishing (OIDC-based
-        # token-less publish) was added in npm 11.5. Without this bump,
-        # `npm publish` silently skips the OIDC handshake and the publish
-        # fails (anonymous PUT → 404).
-        run: npm install --global npm@latest
-
       - name: Install
         run: pnpm install --frozen-lockfile
 
@@ -66,11 +59,17 @@ jobs:
           fi
 
       - name: Publish to npm
-        # Trusted Publishing: no `NODE_AUTH_TOKEN`. npm CLI fetches the
-        # GitHub OIDC token from `id-token: write` above and exchanges
-        # it with the registry (the package must have a trusted
-        # publisher configured at npmjs.com pointing at this repo +
-        # workflow file). `prepack` rebuilds `dist/` before the
-        # tarball; `--provenance` is implicit with OIDC but kept
-        # explicit for clarity.
-        run: npm publish --provenance
+        # `npx npm@latest` bypasses the hosted runner's preinstalled
+        # npm (Node 22 LTS ships npm 10.x, which doesn't support
+        # Trusted Publishing / OIDC — added in npm 11.5). We also hit a
+        # broken preinstalled npm 10.x that `npm i -g npm@latest` can't
+        # recover from ("Cannot find module 'promise-retry'"), so
+        # fetching a fresh npm via npx is both the simplest upgrade
+        # path and a workaround for the toolcache issue.
+        #
+        # No `NODE_AUTH_TOKEN`: npm fetches the GitHub OIDC token
+        # (requires `id-token: write` above) and exchanges it with the
+        # registry. The package must have a trusted publisher
+        # configured on npmjs.com pointing at this repo + workflow.
+        # `prepack` rebuilds `dist/` before the tarball.
+        run: npx npm@latest publish --provenance
