@@ -24,7 +24,7 @@ let fetchPromise: Promise<void> | null = null
 
 function preloadSearchIndex() {
   if (cachedItems || fetchPromise) return
-  fetchPromise = fetch("/api/search-index")
+  fetchPromise = fetch("/api/search-index.json")
     .then((r) => r.json())
     .then((data) => { cachedItems = data })
     .catch(() => {})

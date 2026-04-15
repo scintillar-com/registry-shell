@@ -7,7 +7,6 @@
  * (see next-app/next.config.ts) because Next's `dynamic()` needs string
  * literal imports.
  */
-import "server-only"
 import fs from "node:fs"
 import path from "node:path"
 import matter from "gray-matter"

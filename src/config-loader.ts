@@ -3,11 +3,15 @@
  * the user doesn't need a build step or TS tooling of their own — the shell
  * parses TS on the fly.
  *
- * Called once at Next.js server startup (see src/next-app/registry.config.ts).
+ * Called from two places:
+ *   • Next.js server startup (src/next-app/registry.config.ts) — runtime.
+ *   • The shell CLI's build pipeline (src/cli/generate-search-index.ts) —
+ *     pre-build. The CLI runs in plain Node, not inside Next, so we don't
+ *     use Next's `server-only` guard here.
+ *
  * The returned `ResolvedShellConfig` contains absolute paths and defaults
  * applied.
  */
-import "server-only"
 import path from "node:path"
 import fs from "node:fs"
 import { createJiti } from "jiti"

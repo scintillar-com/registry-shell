@@ -75,8 +75,7 @@ for a branded marketing landing, host it on a separate site.
 |--------------------------|-----------------------------------------------------|
 | `registry-shell init`    | Scaffold `registry-shell.config.ts` + npm scripts   |
 | `registry-shell dev`     | Dev server on `localhost:3000`                      |
-| `registry-shell build`   | Production `next build`                             |
-| `registry-shell start`   | `next start` against a prior build                  |
+| `registry-shell build`   | Static export → `./out/` (deploy anywhere)          |
 
 If your registry has no config file, the shell runs in "shell-only" mode and
 renders its built-in getting-started docs so you can preview the chrome
@@ -147,32 +146,31 @@ defaults.
   `components/`, `content/` layout — the shell doesn't care if you use
   Next.js itself).
 
-## Deploying to Vercel
+## Deploying
 
-The shell's `registry-shell build` writes its Next.js output to
-`<your-project>/.next`, so any Next-aware host (Vercel, Netlify's Next runtime,
-self-hosted Node, etc.) finds it where they expect. On Vercel specifically:
+`registry-shell build` produces a **pure static export** under `./out/` —
+HTML, JS, CSS, and JSON files with no server runtime required. Same
+deployment model as Storybook, Docusaurus, MkDocs, etc.
 
-1. **Add `next` to your project's devDependencies.** Vercel auto-detects
-   Next.js by scanning `package.json`; without a direct `next` entry it may
-   miss the framework and default to static hosting.
-   ```bash
-   npm install -D next
-   ```
-2. **In the Vercel dashboard** (New Project → your repo), set:
-   - **Framework Preset**: Next.js
-   - **Build Command**: `npm run shell:build` (or `registry-shell build`)
-   - **Output Directory**: leave blank (defaults to `.next`)
-   - **Install Command**: leave default
-3. Deploy. Vercel runs your build command, Next writes `.next/` at the
-   project root, and Vercel picks it up like a standard Next.js project.
+Deploy `out/` to anything that serves static files:
 
-`registry-shell start` also respects the same output location, so
-self-hosted deployments work with `npm run shell:build && npm run shell:start`.
+- **Vercel** — push the repo, Vercel auto-detects Next.js with
+  `output: "export"` and serves `out/` from its edge CDN. No custom
+  build command, no Output Directory override. Just push.
+- **Netlify** — `netlify.toml` with `publish = "out"`.
+- **GitHub Pages** — upload `out/` as the Pages artifact.
+- **S3 / CloudFront** — `aws s3 sync out/ s3://your-bucket/`.
+- **Local / self-host** — `npx serve out/` or any static file server.
 
-Need the output somewhere other than `.next`? Set `paths.buildOutput` in
-your config (e.g. `"dist-shell"`). Just remember to point your host's
-Output Directory setting at the same path.
+The shadcn URL contract is preserved: `https://your-domain/r/button.json`
+serves the same bytes consumers' `npx shadcn add` commands expect.
+
+> v1.x users: the shell previously produced a serverful Next.js build
+> that needed Vercel's `@vercel/next` integration. v2.0 switched to
+> static export to sidestep an entire class of file-tracing issues
+> when the shell's Next app lives inside `node_modules`. The trade-off
+> is no runtime SSR / no API routes — registries that need those
+> patterns aren't served by this shell.
 
 ## Releasing
 
