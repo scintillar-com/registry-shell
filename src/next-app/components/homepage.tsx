@@ -8,13 +8,17 @@ import Link from "next/link"
 import { getAllComponents } from "@shell/lib/components-nav"
 import { getAllDocs } from "@shell/lib/docs"
 import type { HomePageProps } from "@shell/lib/registry-adapter"
+import { registry } from "@shell/registry.config"
 
 export default function HomePage({ firstDocSlug }: HomePageProps) {
+  // The placeholder is for shell-only mode (no registry-shell.config.ts
+  // found). A configured-but-empty registry falls through to the main
+  // layout, which renders "0 components" honestly — blocks and docs are
+  // optional surfaces, so their counters hide when zero.
+  if (!registry) return <NoRegistryPlaceholder />
+
   const items = getAllComponents()
   const docs = getAllDocs()
-
-  if (items.length === 0 && docs.length === 0) return <NoRegistryPlaceholder />
-
   const components = items.filter((c) => c.kind === "component")
   const blocks = items.filter((c) => c.kind === "block")
 
@@ -27,9 +31,21 @@ export default function HomePage({ firstDocSlug }: HomePageProps) {
       <section className="mb-12">
         <h1 className="text-3xl font-bold">Registry</h1>
         <p className="mt-2 text-muted-foreground">
-          {components.length} component{components.length === 1 ? "" : "s"},{" "}
-          {blocks.length} block{blocks.length === 1 ? "" : "s"}, {docs.length} doc
-          {docs.length === 1 ? "" : "s"}
+          {/* Components are the core artifact — always shown, even at zero.
+           *  Blocks and docs are optional surfaces; omit them from the
+           *  summary line when the registry doesn't ship any, so a
+           *  component-only registry doesn't advertise empty categories. */}
+          {components.length} component{components.length === 1 ? "" : "s"}
+          {blocks.length > 0 && (
+            <>
+              , {blocks.length} block{blocks.length === 1 ? "" : "s"}
+            </>
+          )}
+          {docs.length > 0 && (
+            <>
+              , {docs.length} doc{docs.length === 1 ? "" : "s"}
+            </>
+          )}
         </p>
         {firstDocSlug && (
           <Link

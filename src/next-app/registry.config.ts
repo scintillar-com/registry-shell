@@ -24,6 +24,7 @@ function buildAdapter(): RegistryAdapter | null {
 
   return {
     getAllComponents: overrides.getAllComponents ?? base.getAllComponents,
+    getCategories: overrides.getCategories ?? base.getCategories,
     getAllDocs: overrides.getAllDocs ?? base.getAllDocs,
     getDocBySlug: overrides.getDocBySlug ?? base.getDocBySlug,
     getDocAllLocales: overrides.getDocAllLocales ?? base.getDocAllLocales,

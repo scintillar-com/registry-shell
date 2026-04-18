@@ -2,11 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useIsMobile } from "@shell/hooks/use-mobile"
-import { BookOpen, Component, Blocks } from "lucide-react"
+import { BookOpen, Component, Blocks, ChevronRight } from "lucide-react"
 import type { DocMeta } from "@shell/lib/docs"
-import type { ComponentMeta } from "@shell/lib/components-nav"
+import type { CategoryMeta, ComponentMeta } from "@shell/lib/components-nav"
 import { useTranslations, useLocale } from "@shell/lib/i18n"
 import { Backdrop } from "@shell/components/shell-ui/backdrop"
 
@@ -15,6 +15,13 @@ import type { ActiveSection } from "@shell/hooks/use-active-section"
 interface SidebarProps {
   docs: DocMeta[]
   components: ComponentMeta[]
+  /**
+   * Ordered sidebar categories. When empty, the components section renders
+   * flat (backward-compatible). When populated, components whose `categories`
+   * include a label are grouped under that collapsible subheading; components
+   * with no category match render flat below the category groups.
+   */
+  categories?: CategoryMeta[]
   open?: boolean
   onClose?: () => void
   collapsed?: boolean
@@ -33,7 +40,16 @@ interface SidebarProps {
   display?: "all" | "mobile" | "desktop"
 }
 
-export function Sidebar({ docs, components, open, onClose, collapsed, activeSection, display = "all" }: SidebarProps) {
+export function Sidebar({
+  docs,
+  components,
+  categories = [],
+  open,
+  onClose,
+  collapsed,
+  activeSection,
+  display = "all",
+}: SidebarProps) {
   const pathname = usePathname()
   const t = useTranslations()
   const { locale } = useLocale()
@@ -54,43 +70,43 @@ export function Sidebar({ docs, components, open, onClose, collapsed, activeSect
 
   const docsSection = (
     <SidebarSection icon={BookOpen} title={t("sidebar.documentation")}>
-      {docs.map((doc) => (
-        <SidebarLink
-          key={doc.slug}
-          href={`/docs/${doc.slug}`}
-          active={pathname === `/docs/${doc.slug}`}
-        >
-          {doc.titles?.[locale] ?? doc.title}
-        </SidebarLink>
-      ))}
+      <ul className="space-y-1">
+        {docs.map((doc) => (
+          <SidebarLink
+            key={doc.slug}
+            href={`/docs/${doc.slug}`}
+            active={pathname === `/docs/${doc.slug}`}
+          >
+            {doc.titles?.[locale] ?? doc.title}
+          </SidebarLink>
+        ))}
+      </ul>
     </SidebarSection>
   )
 
   const componentsSection = (
     <SidebarSection icon={Component} title={t("sidebar.components")}>
-      {uiComponents.map((comp) => (
-        <SidebarLink
-          key={comp.name}
-          href={`/components/${comp.name}`}
-          active={pathname === `/components/${comp.name}`}
-        >
-          {comp.label}
-        </SidebarLink>
-      ))}
+      <SidebarComponentList
+        components={uiComponents}
+        categories={categories}
+        pathname={pathname}
+      />
     </SidebarSection>
   )
 
   const blocksSection = blocks.length > 0 ? (
     <SidebarSection icon={Blocks} title={t("sidebar.blocks")}>
-      {blocks.map((comp) => (
-        <SidebarLink
-          key={comp.name}
-          href={`/components/${comp.name}`}
-          active={pathname === `/components/${comp.name}`}
-        >
-          {comp.label}
-        </SidebarLink>
-      ))}
+      <ul className="space-y-1">
+        {blocks.map((comp) => (
+          <SidebarLink
+            key={comp.name}
+            href={`/components/${comp.name}`}
+            active={pathname === `/components/${comp.name}`}
+          >
+            {comp.label}
+          </SidebarLink>
+        ))}
+      </ul>
     </SidebarSection>
   ) : null
 
@@ -176,6 +192,141 @@ export function Sidebar({ docs, components, open, onClose, collapsed, activeSect
   )
 }
 
+function SidebarComponentList({
+  components,
+  categories,
+  pathname,
+}: {
+  components: ComponentMeta[]
+  categories: CategoryMeta[]
+  pathname: string
+}) {
+  // Fast path: no categories declared → flat list (matches pre-2.1 behavior).
+  if (categories.length === 0) {
+    return (
+      <ul className="space-y-1">
+        {components.map((comp) => (
+          <SidebarLink
+            key={comp.name}
+            href={`/components/${comp.name}`}
+            active={pathname === `/components/${comp.name}`}
+          >
+            {comp.label}
+          </SidebarLink>
+        ))}
+      </ul>
+    )
+  }
+
+  // Partition: each category gets the components whose `categories` include
+  // its label; leftovers go in the uncategorized bucket.
+  const uncategorized = components.filter(
+    (c) => !c.categories || c.categories.length === 0
+  )
+
+  return (
+    <div className="space-y-2">
+      {categories.map((cat) => {
+        const matches = components.filter((c) => c.categories?.includes(cat.label))
+        if (matches.length === 0) return null
+        return (
+          <SidebarCategoryGroup
+            key={cat.label}
+            label={cat.label}
+            components={matches}
+            pathname={pathname}
+          />
+        )
+      })}
+      {uncategorized.length > 0 && (
+        <ul className="space-y-1">
+          {uncategorized.map((comp) => (
+            <SidebarLink
+              key={comp.name}
+              href={`/components/${comp.name}`}
+              active={pathname === `/components/${comp.name}`}
+            >
+              {comp.label}
+            </SidebarLink>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function SidebarCategoryGroup({
+  label,
+  components,
+  pathname,
+}: {
+  label: string
+  components: ComponentMeta[]
+  pathname: string
+}) {
+  // Persist expand/collapse across navigations via localStorage. Key includes
+  // the label so different categories don't clobber each other.
+  const storageKey = `registry-shell.sidebar-category.${label}`
+  const [open, setOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true
+    const stored = window.localStorage.getItem(storageKey)
+    return stored === null ? true : stored === "1"
+  })
+
+  // If a component inside this category is the active route, auto-expand so
+  // the user can see their current page in context.
+  const activeChildName = components.find(
+    (c) => pathname === `/components/${c.name}`
+  )?.name
+  useEffect(() => {
+    if (activeChildName && !open) setOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when active route enters this category
+  }, [activeChildName])
+
+  const toggle = useCallback(() => {
+    setOpen((prev) => {
+      const next = !prev
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(storageKey, next ? "1" : "0")
+      }
+      return next
+    })
+  }, [storageKey])
+
+  const contentId = `sidebar-category-${label.replace(/\s+/g, "-").toLowerCase()}`
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-expanded={open}
+        aria-controls={contentId}
+        className="flex w-full items-center gap-1 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronRight
+          className={`size-3 transition-transform motion-reduce:transition-none ${open ? "rotate-90" : ""}`}
+          aria-hidden="true"
+        />
+        <span>{label}</span>
+      </button>
+      {open && (
+        <ul id={contentId} className="space-y-1 mt-1">
+          {components.map((comp) => (
+            <SidebarLink
+              key={comp.name}
+              href={`/components/${comp.name}`}
+              active={pathname === `/components/${comp.name}`}
+            >
+              {comp.label}
+            </SidebarLink>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 function SidebarSection({
   icon: Icon,
   title,
@@ -191,7 +342,7 @@ function SidebarSection({
         <Icon className="size-4" />
         <span className="flex-1 text-left">{title}</span>
       </div>
-      <ul className="space-y-1">{children}</ul>
+      {children}
     </div>
   )
 }

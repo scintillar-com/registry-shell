@@ -4,15 +4,17 @@ import { Sidebar } from "@shell/components/sidebar"
 import { useMobileSidebar } from "@shell/components/sidebar-provider"
 import { useActiveSection } from "@shell/hooks/use-active-section"
 import type { DocMeta } from "@shell/lib/docs"
-import type { ComponentMeta } from "@shell/lib/components-nav"
+import type { CategoryMeta, ComponentMeta } from "@shell/lib/components-nav"
 
 export function SidebarLayout({
   docs,
   components,
+  categories,
   children,
 }: {
   docs: DocMeta[]
   components: ComponentMeta[]
+  categories?: CategoryMeta[]
   children: React.ReactNode
 }) {
   const { open, close, collapsed } = useMobileSidebar()
@@ -20,11 +22,12 @@ export function SidebarLayout({
 
   return (
     <div className="flex">
-      {/* Desktop-only — the mobile floating card is mounted once from the root
+      {/* Desktop-only; the mobile floating card is mounted once from the root
           layout so the hamburger menu works on every page (homepage included). */}
       <Sidebar
         docs={docs}
         components={components}
+        categories={categories}
         open={open}
         onClose={close}
         collapsed={collapsed}

@@ -20,6 +20,11 @@ export interface ComponentMeta {
   name: string
   label: string
   kind: "component" | "block"
+  categories?: string[]
+}
+
+export interface CategoryMeta {
+  label: string
 }
 
 export interface DocMeta {
@@ -67,7 +72,15 @@ export function createDefaultAdapter(resolved: ResolvedShellConfig) {
     if (fs.existsSync(paths.components)) {
       for (const filename of fs.readdirSync(paths.components).filter((f) => f.endsWith(".tsx"))) {
         const name = filename.replace(/\.tsx$/, "")
-        items.push({ name, label: titleCase(name), kind: "component" })
+        const categories = resolved.categories
+          .filter((c) => c.names.has(name))
+          .map((c) => c.label)
+        items.push({
+          name,
+          label: titleCase(name),
+          kind: "component",
+          ...(categories.length > 0 ? { categories } : {}),
+        })
       }
     }
 
@@ -79,6 +92,10 @@ export function createDefaultAdapter(resolved: ResolvedShellConfig) {
     }
 
     return items.sort((a, b) => a.label.localeCompare(b.label))
+  }
+
+  function getCategories(): CategoryMeta[] {
+    return resolved.categories.map((c) => ({ label: c.label }))
   }
 
   function getAllDocs(): DocMeta[] {
@@ -197,6 +214,7 @@ export function createDefaultAdapter(resolved: ResolvedShellConfig) {
 
   return {
     getAllComponents,
+    getCategories,
     getAllDocs,
     getDocBySlug,
     getDocAllLocales,

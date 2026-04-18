@@ -179,6 +179,26 @@ export interface ShellConfig {
   transpilePackages?: string[]
 
   /**
+   * Optional. Group components under collapsible sub-sections in the sidebar.
+   * Keys are category labels (rendered verbatim as headings); values are
+   * arrays of component names matching entries in `components/ui`. Components
+   * not listed in any category render as a flat list below the categorized
+   * groups (backward-compatible with the existing flat behavior).
+   *
+   * Example:
+   * ```ts
+   * categories: {
+   *   "Web3": ["wallet", "connect-wallet", "token-amount"],
+   * }
+   * ```
+   *
+   * Blocks are always flat; categories only apply to the Components section.
+   * A component listed in multiple categories appears in each (rare, but
+   * supported for cross-cutting primitives).
+   */
+  categories?: Record<string, string[]>
+
+  /**
    * Optional. Template the shell uses to render the install command in the
    * component "Install" tab. Supported placeholders:
    *   - `{name}`    — the component/block slug (e.g. `"button"`)

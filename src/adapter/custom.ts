@@ -36,6 +36,7 @@ import type { ResolvedShellConfig } from "../config-loader.js"
  */
 export interface AdapterOverrides {
   getAllComponents?: () => unknown[]
+  getCategories?: () => unknown[]
   getAllDocs?: () => unknown[]
   getDocBySlug?: (slug: string, locale?: string) => unknown | null
   getDocAllLocales?: (slug: string) => Record<string, string>

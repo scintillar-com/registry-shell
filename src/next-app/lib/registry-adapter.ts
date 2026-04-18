@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from "react"
 
-/** One entry in the registry's navigation — a UI component or a block. */
+/** One entry in the registry's navigation; a UI component or a block. */
 export interface ComponentMeta {
   /** URL-safe slug, e.g. `"button"` or `"auth-login"`. */
   name: string
@@ -12,6 +12,23 @@ export interface ComponentMeta {
    * into separate sidebar sections.
    */
   kind: "component" | "block"
+  /**
+   * Optional sidebar sub-section labels driven by the `categories` field in
+   * the shell config. A component may appear in multiple categories. Empty /
+   * omitted = uncategorized (renders flat under the Components section).
+   * Only honored for `kind: "component"`; blocks are always flat.
+   */
+  categories?: string[]
+}
+
+/**
+ * Sidebar category metadata exposed to the shell. The sidebar renders each
+ * category as a collapsible sub-section (in the order the consumer declared
+ * them in the shell config).
+ */
+export interface CategoryMeta {
+  /** Display label, e.g. `"Web3"`. */
+  label: string
 }
 
 /** Doc page metadata (frontmatter + slug). Drives the docs sidebar. */
@@ -114,6 +131,13 @@ export interface RegistryAdapter {
    * time, where STYLE is e.g. "new-york" or "default".
    */
   getAllComponents(): ComponentMeta[]
+
+  /**
+   * Ordered list of sidebar categories declared in the shell config. Empty
+   * when the consumer did not set `categories`; in that case the sidebar
+   * renders a flat list (backward-compatible).
+   */
+  getCategories?(): CategoryMeta[]
 
   /** Full list of MDX docs with their frontmatter. */
   getAllDocs(): DocMeta[]

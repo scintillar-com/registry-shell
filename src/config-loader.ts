@@ -69,6 +69,12 @@ export interface ResolvedShellConfig {
   /** Absolute path to a custom adapter module, or null. */
   adapter: string | null
   extraTranslations: Record<string, Record<string, string>>
+  /**
+   * Ordered list of component-sidebar categories (preserves user config order).
+   * Each entry holds a label and the set of component names it contains. When
+   * empty, the shell renders the flat, un-grouped sidebar.
+   */
+  categories: Array<{ label: string; names: Set<string> }>
   /** When true, docs live under per-locale subfolders. */
   multilocale: boolean
   /** Locale subfolder containing the canonical doc set. Empty when multilocale is off. */
@@ -130,6 +136,10 @@ export function loadResolvedConfig(): ResolvedShellConfig | null {
     },
     adapter: config.adapter ? path.resolve(rootAbs, config.adapter) : null,
     extraTranslations: config.extraTranslations ?? {},
+    categories: Object.entries(config.categories ?? {}).map(([label, names]) => ({
+      label,
+      names: new Set(names),
+    })),
     multilocale: Boolean(config.multilocale),
     defaultLocale: config.defaultLocale ?? "",
     locales: resolveLocales(rootAbs, cfgPaths.docs ?? DEFAULT_PATHS.docs, config),
