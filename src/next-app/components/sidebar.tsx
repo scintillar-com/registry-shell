@@ -192,6 +192,14 @@ export function Sidebar({
   )
 }
 
+/**
+ * Stable slug for the uncategorized bucket's localStorage key + DOM id. Kept
+ * in English on purpose so a user's collapsed/expanded preference and the
+ * rendered id survive locale switches; the visible heading is translated via
+ * `sidebar.base` (override per locale in extraTranslations).
+ */
+const UNCATEGORIZED_SLUG = "base"
+
 function SidebarComponentList({
   components,
   categories,
@@ -201,6 +209,8 @@ function SidebarComponentList({
   categories: CategoryMeta[]
   pathname: string
 }) {
+  const t = useTranslations()
+
   // Fast path: no categories declared → flat list (matches pre-2.1 behavior).
   if (categories.length === 0) {
     return (
@@ -219,54 +229,69 @@ function SidebarComponentList({
   }
 
   // Partition: each category gets the components whose `categories` include
-  // its label; leftovers go in the uncategorized bucket.
+  // its label; leftovers land in a synthesized group (translated via
+  // `sidebar.base`). All groups — including Base — render alphabetically so
+  // declaration order in config has no effect on presentation.
   const uncategorized = components.filter(
     (c) => !c.categories || c.categories.length === 0
   )
 
+  const groups: Array<{
+    label: string
+    slug: string
+    components: ComponentMeta[]
+  }> = categories
+    .map((cat) => ({
+      label: cat.label,
+      slug: cat.label,
+      components: components.filter((c) => c.categories?.includes(cat.label)),
+    }))
+    .filter((g) => g.components.length > 0)
+
+  if (uncategorized.length > 0) {
+    groups.push({
+      label: t("sidebar.base"),
+      slug: UNCATEGORIZED_SLUG,
+      components: uncategorized,
+    })
+  }
+
+  groups.sort((a, b) => a.label.localeCompare(b.label))
+
   return (
     <div className="space-y-2">
-      {categories.map((cat) => {
-        const matches = components.filter((c) => c.categories?.includes(cat.label))
-        if (matches.length === 0) return null
-        return (
-          <SidebarCategoryGroup
-            key={cat.label}
-            label={cat.label}
-            components={matches}
-            pathname={pathname}
-          />
-        )
-      })}
-      {uncategorized.length > 0 && (
-        <ul className="space-y-1">
-          {uncategorized.map((comp) => (
-            <SidebarLink
-              key={comp.name}
-              href={`/components/${comp.name}`}
-              active={pathname === `/components/${comp.name}`}
-            >
-              {comp.label}
-            </SidebarLink>
-          ))}
-        </ul>
-      )}
+      {groups.map((g) => (
+        <SidebarCategoryGroup
+          key={g.slug}
+          label={g.label}
+          slug={g.slug}
+          components={g.components}
+          pathname={pathname}
+        />
+      ))}
     </div>
   )
 }
 
 function SidebarCategoryGroup({
   label,
+  slug,
   components,
   pathname,
 }: {
   label: string
+  /**
+   * Stable identifier used for the localStorage key and DOM id. Distinct from
+   * `label` so translated headings don't invalidate user preferences when the
+   * locale changes.
+   */
+  slug: string
   components: ComponentMeta[]
   pathname: string
 }) {
-  // Persist expand/collapse across navigations via localStorage. Key includes
-  // the label so different categories don't clobber each other.
-  const storageKey = `registry-shell.sidebar-category.${label}`
+  // Persist expand/collapse across navigations via localStorage. Key uses the
+  // slug (stable), not the translated label.
+  const storageKey = `registry-shell.sidebar-category.${slug}`
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof window === "undefined") return true
     const stored = window.localStorage.getItem(storageKey)
@@ -293,7 +318,7 @@ function SidebarCategoryGroup({
     })
   }, [storageKey])
 
-  const contentId = `sidebar-category-${label.replace(/\s+/g, "-").toLowerCase()}`
+  const contentId = `sidebar-category-${slug.replace(/\s+/g, "-").toLowerCase()}`
 
   return (
     <div>

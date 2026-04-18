@@ -28,6 +28,7 @@ const translations = {
     "sidebar.documentation": "Documentation",
     "sidebar.components": "Components",
     "sidebar.blocks": "Blocks",
+    "sidebar.base": "Base",
 
     // Search
     "search.placeholder": "Search documentation and components...",
@@ -285,6 +286,7 @@ const translations = {
     "sidebar.documentation": "Documentation",
     "sidebar.components": "Composants",
     "sidebar.blocks": "Blocs",
+    "sidebar.base": "Base",
 
     // Search
     "search.placeholder": "Rechercher dans la documentation et les composants...",
