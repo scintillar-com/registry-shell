@@ -211,7 +211,7 @@ const translations = {
     "hero.wysiwyg.author": "Edith",
 
     // Component page
-    "component.subtitle": "Install this component from the Scintillar registry.",
+    "component.subtitle": "Install this component.",
     "component.installation": "Installation",
     "component.source": "Source",
     "component.propsBehavior": "Props & Behavior",
@@ -469,7 +469,7 @@ const translations = {
     "hero.wysiwyg.author": "Édith",
 
     // Component page
-    "component.subtitle": "Installez ce composant depuis le registre Scintillar.",
+    "component.subtitle": "Installez ce composant.",
     "component.installation": "Installation",
     "component.source": "Source",
     "component.propsBehavior": "Props et comportement",
