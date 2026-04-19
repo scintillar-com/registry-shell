@@ -47,9 +47,16 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      - name: Verify tag matches package version
-        # Catches the mistake of pushing `v1.0.1` when package.json still
-        # says 1.0.0 — npm would happily re-publish 1.0.0 and collide.
+      - name: Verify tag matches package version and resolve dist-tag
+        id: version
+        # Two checks in one step:
+        # 1. Tag must match package.json — catches the mistake of pushing
+        #    `v1.0.1` when package.json still says 1.0.0 (npm would re-publish
+        #    1.0.0 and collide).
+        # 2. Route prereleases (`2.4.0-rc.1`, `3.0.0-beta.5`, etc.) to the
+        #    `next` dist-tag instead of `latest`, so `pnpm add <pkg>` and
+        #    consumers with caret ranges never surface an unstable version.
+        #    Any version containing `-` is treated as a prerelease (semver).
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
           PKG=$(node -p "require('./package.json').version")
@@ -57,6 +64,12 @@ jobs:
             echo "::error::Tag v$TAG does not match package.json version $PKG"
             exit 1
           fi
+          if [[ "$TAG" == *-* ]]; then
+            echo "dist=next" >> "$GITHUB_OUTPUT"
+          else
+            echo "dist=latest" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Publishing $PKG to dist-tag: $(if [[ $TAG == *-* ]]; then echo next; else echo latest; fi)"
 
       - name: Publish to npm
         # `npx npm@latest` bypasses the hosted runner's preinstalled
@@ -72,4 +85,4 @@ jobs:
         # registry. The package must have a trusted publisher
         # configured on npmjs.com pointing at this repo + workflow.
         # `prepack` rebuilds `dist/` before the tarball.
-        run: npx npm@latest publish --provenance
+        run: npx npm@latest publish --provenance --tag ${{ steps.version.outputs.dist }}
