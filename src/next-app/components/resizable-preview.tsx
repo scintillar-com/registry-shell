@@ -94,7 +94,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
       >
-        <div className="w-8 h-0.5 rounded-full bg-border group-hover:bg-muted-foreground transition-colors" />
+        <div className="w-8 h-0.5 rounded-full bg-border group-hover:bg-primary transition-colors" />
       </div>
     </div>
   )

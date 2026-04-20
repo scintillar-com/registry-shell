@@ -156,7 +156,7 @@
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--muted-foreground);
+  background: var(--primary);
 }
 
 .prose pre {
