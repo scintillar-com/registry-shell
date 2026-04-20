@@ -387,7 +387,7 @@ function SidebarLink({
         href={href}
         className={`block text-sm px-2 py-1.5 rounded-md transition-colors ${
           active
-            ? "bg-accent text-accent-foreground font-medium"
+            ? "bg-primary/10 text-foreground font-medium"
             : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
         }`}
       >

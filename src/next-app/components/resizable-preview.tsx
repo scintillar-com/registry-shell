@@ -90,7 +90,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
         {children}
       </div>
       <div
-        className="h-3 md:h-2 cursor-row-resize flex items-center justify-center hover:bg-muted/50 active:bg-muted/50 transition-colors group touch-none"
+        className="h-3 md:h-2 cursor-row-resize flex items-center justify-center hover:bg-primary/10 active:bg-primary/10 transition-colors group touch-none"
         onMouseDown={onMouseDown}
         onTouchStart={onTouchStart}
       >
