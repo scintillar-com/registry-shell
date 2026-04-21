@@ -1,11 +1,13 @@
 {
-  "name": "minimal-registry",
+  "name": "dev-registry",
   "version": "0.0.0",
   "private": true,
   "scripts": {
     "shell": "registry-shell dev"
   },
   "devDependencies": {
-    "@sntlr/registry-shell": "workspace:*"
+    "@sntlr/registry-shell": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
   }
 }

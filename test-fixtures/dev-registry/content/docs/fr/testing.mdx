@@ -1,0 +1,47 @@
+---
+title: Tester le shell
+description: Comment utiliser cette fixture pour valider les changements du shell de bout en bout.
+order: 2
+---
+
+# Tester le shell
+
+Cette fixture vit dans le dépôt du shell lui-même, ce qui vous permet de
+valider les changements UI du shell sans publier sur npm et sans toucher à
+une vraie registry de consommateur.
+
+## Flux de travail
+
+```bash
+# Depuis la racine du dépôt registry-shell
+pnpm install           # établit le lien workspace:* vers le source local
+pnpm dev:registry      # démarre le shell contre cette fixture sur :3100
+```
+
+Modifiez n'importe quel fichier sous `src/next-app/**` dans le shell,
+sauvegardez, et le serveur de développement de la fixture le récupère via
+le hot reload de Next. Le lien symbolique workspace signifie qu'aucun
+tarball ne s'interpose; vous exécutez exactement le TypeScript que vous
+venez d'éditer.
+
+## Ce que cette fixture exerce
+
+- **Regroupement de la sidebar**; catégories `Primitives` et `Layout`, plus
+  un groupe `Base` synthétisé pour les éléments non catégorisés (`hello`).
+- **Surlignage du lien actif**; naviguez entre composants et celui en cours
+  doit apparaître avec `bg-primary/10` dans la sidebar.
+- **Section Blocks**; `hero-card` apparaît sous un en-tête "Blocks" dédié.
+- **Surfaces d'interaction teintées en primaire**; soulignement de l'onglet
+  actif, curseur de barre de défilement au survol, poignée de
+  redimensionnement au survol.
+- **Section documentation**; cette page ainsi que la page d'introduction
+  valident la sidebar docs et le pipeline MDX, y compris le basculement
+  entre locales.
+
+## Ce que cette fixture n'est pas
+
+- Ce n'est pas une registry de production. Les composants sont de minces
+  stubs destinés à afficher des formes reconnaissables dans le canvas
+  d'aperçu, pas à être installés par des consommateurs via le shadcn CLI.
+- Elle n'est pas publiée sur npm. Le répertoire `test-fixtures/` est exclu
+  de `package.json#files`.

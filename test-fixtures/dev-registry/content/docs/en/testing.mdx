@@ -1,0 +1,44 @@
+---
+title: Testing the shell
+description: How to use this fixture to validate shell changes end-to-end.
+order: 2
+---
+
+# Testing the shell
+
+This fixture exists inside the shell's own repository so you can validate
+shell UI changes without publishing to npm first, and without touching a
+real consumer registry.
+
+## Workflow
+
+```bash
+# From the registry-shell repo root
+pnpm install           # wires workspace:* so the fixture sees local source
+pnpm dev:registry      # boots the shell against this fixture at :3100
+```
+
+Edit any file under `src/next-app/**` in the shell, save, and the fixture's
+dev server picks it up via Next's hot reload. The workspace symlink means
+there's no tarball in between; you're running against the exact TypeScript
+you just edited.
+
+## What this fixture exercises
+
+- **Sidebar grouping** — `Primitives` + `Layout` categories plus a synthesized
+  `Base` group for uncategorized items (`hello`).
+- **Active-link highlighting** — navigate between components and the current
+  one should render with `bg-primary/10` in the sidebar.
+- **Blocks section** — `hero-card` appears under a dedicated "Blocks" header.
+- **Primary-tinted interaction surfaces** — active tab underline, scrollbar
+  thumb on hover, resize handle on hover.
+- **Docs section** — this page plus the intro page validate the docs
+  sidebar + MDX pipeline.
+
+## What this fixture is not
+
+- Not a production registry. Components are thin stubs meant to render
+  recognizable shapes in the preview canvas, not to be installed by consumers
+  via the shadcn CLI.
+- Not shipped on npm. The `test-fixtures/` directory is excluded from
+  `package.json#files`.

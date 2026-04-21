@@ -50,7 +50,12 @@ export function Sidebar({
   activeSection,
   display = "all",
 }: SidebarProps) {
-  const pathname = usePathname()
+  // Strip the trailing slash that Next emits when trailingSlash: true is set
+  // on the shell's next.config.ts (needed for static export). Without this,
+  // usePathname() returns e.g. "/components/button/" and the href comparisons
+  // (which build "/components/button" without a trailing slash) never match,
+  // so every sidebar link renders as non-active.
+  const pathname = (usePathname() ?? "").replace(/\/$/, "") || "/"
   const t = useTranslations()
   const { locale } = useLocale()
 

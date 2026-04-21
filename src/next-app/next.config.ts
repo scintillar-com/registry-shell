@@ -72,6 +72,17 @@ const nextConfig: NextConfig = {
       : []),
   ],
 
+  // `next-mdx-remote/rsc` evals MDX via `new Function(...)` with an injected
+  // jsxRuntime loaded from `react/jsx-dev-runtime`. In dev mode React 19.2's
+  // dev runtime reads `ReactSharedInternals.recentlyCreatedOwnerStacks`, and
+  // that Internals object lives on the user's React copy, not Next's vendored
+  // RSC React. Bundling next-mdx-remote through Next's RSC webpack graph
+  // crosses that boundary and crashes: "Cannot read properties of undefined
+  // (reading 'recentlyCreatedOwnerStacks')". Marking the package as
+  // server-external keeps it on Node's normal require chain, so the React it
+  // loads matches the one Next's RSC runtime hands it.
+  serverExternalPackages: ["next-mdx-remote"],
+
   // Turbopack root: walk up until we find a dir that contains both the shell
   // package and the user's project. For a pnpm workspace setup that's the
   // workspace root. Falls back to process.cwd() (which is the user's project

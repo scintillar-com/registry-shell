@@ -7,6 +7,11 @@ dist
 # Next.js dev cache
 src/next-app/.next
 
+# Dev-registry fixture build output (test-fixtures/<name>/out from
+# `registry-shell build`, plus its own Next cache when using `dev`).
+test-fixtures/*/out
+test-fixtures/*/.next
+
 # Files the shell CLI rewrites every boot
 src/next-app/.*-mode
 src/next-app/app/_user-sources.css
