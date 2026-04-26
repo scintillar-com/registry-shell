@@ -27,6 +27,12 @@ function getStoredHeight(): number {
 
 export function ResizablePreview({ children }: { children: React.ReactNode }) {
   const [height, setHeight] = useState(getStoredHeight)
+  // Tracked in state (not just a ref) so we can flip a CSS class that
+  // disables iframe pointer events while dragging — without it, the
+  // cursor crossing into a child iframe interrupts the document-level
+  // mousemove/mouseup handlers (events fire inside the iframe instead)
+  // and the drag silently dies, especially when shrinking the preview.
+  const [isDragging, setIsDragging] = useState(false)
   const dragging = useRef(false)
   const startY = useRef(0)
   const startH = useRef(0)
@@ -38,6 +44,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
   const onMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     dragging.current = true
+    setIsDragging(true)
     startY.current = e.clientY
     startH.current = height
     document.body.style.cursor = "row-resize"
@@ -51,6 +58,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
 
     function onMouseUp() {
       dragging.current = false
+      setIsDragging(false)
       document.body.style.cursor = ""
       document.body.style.userSelect = ""
       document.removeEventListener("mousemove", onMouseMove)
@@ -64,6 +72,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
   const onTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length !== 1) return
     dragging.current = true
+    setIsDragging(true)
     startY.current = e.touches[0].clientY
     startH.current = height
 
@@ -76,6 +85,7 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
 
     function onTouchEnd() {
       dragging.current = false
+      setIsDragging(false)
       document.removeEventListener("touchmove", onTouchMove)
       document.removeEventListener("touchend", onTouchEnd)
     }
@@ -85,9 +95,19 @@ export function ResizablePreview({ children }: { children: React.ReactNode }) {
   }, [height])
 
   return (
-    <div>
-      <div style={{ height }}>
+    <div data-resize-dragging={isDragging || undefined}>
+      <div style={{ height }} className="relative">
         {children}
+        {/* Transparent overlay while dragging — sits on top of any iframe
+            child so mousemove keeps firing on the document and the drag
+            survives the cursor crossing into the iframe. The overlay's
+            cursor matches the resize handle so feedback is consistent. */}
+        {isDragging && (
+          <div
+            className="absolute inset-0 z-10 cursor-row-resize"
+            aria-hidden="true"
+          />
+        )}
       </div>
       <div
         className="h-3 md:h-2 cursor-row-resize flex items-center justify-center hover:bg-primary/10 active:bg-primary/10 transition-colors group touch-none"

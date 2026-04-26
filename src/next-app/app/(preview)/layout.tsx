@@ -4,6 +4,7 @@ import { ThemeProvider } from "@shell/components/theme-provider"
 import { I18nProvider } from "@shell/lib/i18n"
 import { registry } from "@shell/registry.config"
 import { getShellDefaultLocale, getShellLocales } from "@shell/lib/locales"
+import "./preview.css"
 
 /**
  * Root layout for the (preview) route group — sibling of (shell)/layout.tsx

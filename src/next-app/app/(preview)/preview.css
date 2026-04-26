@@ -22,7 +22,7 @@
 /* User's Tailwind content scan — same generated file the shell's
  * globals.css imports, so the preview-only stylesheet picks up the
  * component classes the user authors. */
-@import "../../_user-sources.css";
+@import "../_user-sources.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -147,4 +147,4 @@
 /* Optional user globals — picked up so a registry that ships its own
  * theme (e.g. @monark/theme) can override the defaults above without
  * needing a parallel preview-only override. */
-@import "../../_user-global.css";
+@import "../_user-global.css";

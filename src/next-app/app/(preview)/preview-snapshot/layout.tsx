@@ -1,19 +1,9 @@
-import "./preview.css"
-
 /**
- * Minimal layout for isolated component previews.
- *
- * Two consumers:
- *  - The inline `/components/[name]` page renders this route inside an
- *    iframe so previews aren't polluted by shell chrome (custom scrollbar,
- *    html font-size clamp, prose helpers, marquee/bento animation
- *    classes, etc.).
- *  - Playwright visual-snapshot tests target this same route directly.
- *
- * The imported `preview.css` is a deliberate subset of `globals.css`:
- * Tailwind + theme tokens + base layer only. Anything that would cause a
- * preview to render differently from a downstream consumer's app is
- * excluded by design.
+ * Bare-render route for Playwright visual snapshots. `SnapshotPreview`
+ * inside the page suppresses `PreviewCanvas` chrome via
+ * `SnapshotModeProvider` so screenshots crop cleanly to the component.
+ * CSS is loaded by the parent `(preview)/layout.tsx` ; this nested
+ * layout just adds breathing-room padding around the component.
  */
 export default function SnapshotLayout({
   children,
