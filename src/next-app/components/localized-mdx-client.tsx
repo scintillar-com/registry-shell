@@ -1,26 +1,22 @@
 "use client"
 
-import { MDXRemote, type MDXRemoteSerializeResult } from "next-mdx-remote"
+import type { ReactNode } from "react"
 import { useLocale } from "@shell/lib/i18n"
-import { mdxHeadings } from "@shell/components/heading-anchor"
 
 /**
- * Client wrapper that picks one of the serialized locale payloads produced
- * by the server-side `LocalizedMdx` and renders it via client-side
- * `MDXRemote`. Evaluation happens in the browser with one React instance,
- * avoiding the Next RSC / userland React jsx-runtime boundary crash.
- *
- * The heading-anchor components render client-side so their onClick
- * handlers (history push, smooth-scroll, clipboard copy) bind correctly.
+ * Client wrapper that picks one of the already-resolved React trees the
+ * server-side `LocalizedMdx` produced via `compileMDX`. There is no MDX
+ * eval on the client; the heading-anchor components were already wired in
+ * during the server compile and their event handlers (history push,
+ * smooth-scroll, clipboard copy) hydrate normally.
  */
 export function LocalizedMdxClient({
-  serialized,
+  rendered,
 }: {
-  serialized: Record<string, MDXRemoteSerializeResult>
+  rendered: Record<string, ReactNode>
 }) {
   const { locale } = useLocale()
-  const active =
-    serialized[locale] ?? serialized.en ?? Object.values(serialized)[0]
+  const active = rendered[locale] ?? rendered.en ?? Object.values(rendered)[0]
   if (!active) return null
-  return <MDXRemote {...active} components={mdxHeadings} />
+  return <>{active}</>
 }
