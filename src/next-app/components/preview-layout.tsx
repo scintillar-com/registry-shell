@@ -1,12 +1,31 @@
 "use client"
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 import type { ControlEntry } from "@shell/hooks/use-controls"
 import type { CameraState, CanvasPosition } from "@shell/components/preview-canvas"
 import { PreviewControls } from "@shell/components/preview-controls"
 import { PreviewCanvas } from "@shell/components/preview-canvas"
 import { useTranslations } from "@shell/lib/i18n"
-import { useMobileSidebar } from "@shell/components/sidebar-provider"
+
+/**
+ * postMessage shape used to drive iframe-level fullscreen from the
+ * parent shell. PreviewLayout posts on toggle; ResizablePreview (in the
+ * shell) listens, sizes the iframe wrapper to cover the shell viewport
+ * (minus header), and collapses the sidebar.
+ *
+ * The type tag is namespaced so the listener can ignore unrelated
+ * postMessage traffic (next-themes, third-party iframes, etc.).
+ */
+const FULLSCREEN_MESSAGE = "@sntlr/preview:fullscreen" as const
+
+function postFullscreenToParent(value: boolean): void {
+  if (typeof window === "undefined") return
+  if (window.parent === window) return // not in an iframe
+  window.parent.postMessage(
+    { type: FULLSCREEN_MESSAGE, value } as const,
+    window.location.origin,
+  )
+}
 
 const SnapshotModeContext = createContext(false)
 
@@ -43,60 +62,41 @@ export function PreviewLayout({
     if (typeof window === "undefined") return false
     return sessionStorage.getItem("preview-controls") === "true"
   })
-  const [restoredFullscreen] = useState(() => {
+  // `fullscreen` is local UX state (controls toolbar icon + mobile
+  // controls-toggle behavior). The actual fullscreen visual ; iframe
+  // wrapper sized to cover the shell viewport ; is handled by the
+  // parent shell via postMessage.
+  const [fullscreen, setFullscreen] = useState(() => {
     if (typeof window === "undefined") return false
     return sessionStorage.getItem("preview-fullscreen") === "true"
   })
-  const [fullscreen, setFullscreen] = useState(restoredFullscreen)
-  const [fsVisible, setFsVisible] = useState(restoredFullscreen)
   const t = useTranslations()
-  const { setCollapsed } = useMobileSidebar()
 
   // Shared camera state between inline and fullscreen canvases
   const [camera, setCamera] = useState<CameraState>({ x: 0, y: 0, zoom: 1 })
   const [position, setPosition] = useState<CanvasPosition>({ x: 0, y: 0 })
 
-  // Ref to the inline preview container — used to capture its position
-  const inlineRef = useRef<HTMLDivElement>(null)
-  // The captured rect of the inline preview when entering/exiting fullscreen
-  const [originRect, setOriginRect] = useState({ top: 0, bottom: 0, left: 0, right: 0 })
-
-  // Sync state on mount / mobile change
+  // Mirror the restored-from-storage fullscreen state to the parent on
+  // mount. Without this, a page-load with `preview-fullscreen=true` left
+  // the iframe wrapper bounded to its inline-resize size.
   useEffect(() => {
-    if (isMobile === null) return
-    // Restore fullscreen sidebar collapse
-    if (fullscreen && !isMobile) setCollapsed(true)
-  }, [isMobile]) // eslint-disable-line react-hooks/exhaustive-deps -- intentionally run only on mount/mobile change
-
-  // Animate fullscreen in
-  useEffect(() => {
-    if (fullscreen) {
-      requestAnimationFrame(() => setFsVisible(true))
-    }
-  }, [fullscreen])
-
-  const enterFullscreen = useCallback(() => {
-    if (inlineRef.current) {
-      const rect = inlineRef.current.getBoundingClientRect()
-      const vw = window.innerWidth
-      const vh = window.innerHeight
-      setOriginRect({
-        top: rect.top,
-        bottom: vh - rect.bottom,
-        left: rect.left,
-        right: vw - rect.right,
-      })
-    }
-    if (!isMobile) setCollapsed(true)
-    setCamera({ x: 0, y: 0, zoom: 1 })
-    setPosition({ x: 0, y: 0 })
-    setFullscreen(true)
-    sessionStorage.setItem("preview-fullscreen", "true")
-  }, [isMobile, setCollapsed])
+    if (fullscreen) postFullscreenToParent(true)
+    // Run only on mount; subsequent toggles are handled in
+    // enter/exitFullscreen below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // In snapshot mode, render children directly — no canvas, no controls
   if (isSnapshot) {
     return <>{children}</>
+  }
+
+  const enterFullscreen = () => {
+    setCamera({ x: 0, y: 0, zoom: 1 })
+    setPosition({ x: 0, y: 0 })
+    setFullscreen(true)
+    sessionStorage.setItem("preview-fullscreen", "true")
+    postFullscreenToParent(true)
   }
 
   function toggleControls() {
@@ -110,6 +110,7 @@ export function PreviewLayout({
         setFullscreen(true)
         setShowControls(true)
         sessionStorage.setItem("preview-controls", "true")
+        postFullscreenToParent(true)
       }
     } else {
       setShowControls((s) => {
@@ -120,46 +121,25 @@ export function PreviewLayout({
   }
 
   function exitFullscreen() {
-    // Animate sidebar open + preview shrink simultaneously
-    if (!isMobile) {
-      setCollapsed(false)
-      // Set origin to where the inline preview will land (sidebar width = 16rem = 256px on md+)
-      setOriginRect((prev) => ({ ...prev, left: 256 }))
-    }
-    setFsVisible(false)
     setCamera({ x: 0, y: 0, zoom: 1 })
     setPosition({ x: 0, y: 0 })
+    setFullscreen(false)
     sessionStorage.setItem("preview-fullscreen", "false")
-    // After animation, switch to relative
-    setTimeout(() => {
-      setFullscreen(false)
-      if (isMobile) {
-        setShowControls(false)
-        sessionStorage.setItem("preview-controls", "false")
-      }
-    }, 300)
+    if (isMobile) {
+      setShowControls(false)
+      sessionStorage.setItem("preview-controls", "false")
+    }
+    postFullscreenToParent(false)
   }
 
   return (
     <>
-      {/* Inline placeholder — reserves space in the document flow when fullscreen */}
-      {fullscreen && (
-        <div ref={inlineRef} className="border-y border-border h-full" />
-      )}
-
-      {/* Single preview container — animates between inline and fullscreen */}
+      {/* The preview always fills its iframe ; the iframe itself is
+          either inline (bounded by ResizablePreview) or fullscreen
+          (sized by the parent shell via postMessage). PreviewLayout
+          renders the same `relative h-full` container in both modes. */}
       <div
-        ref={!fullscreen ? inlineRef : undefined}
-        className={`
-          bg-background border-y border-border overflow-hidden flex flex-col
-          ${fullscreen ? "fixed z-40 transition-[top,bottom,left,right] duration-300 ease-in-out motion-reduce:transition-none" : "relative h-full"}
-        `}
-        style={fullscreen ? {
-          top: fsVisible ? "3.5rem" : originRect.top,
-          bottom: fsVisible ? 0 : originRect.bottom,
-          left: fsVisible ? 0 : originRect.left,
-          right: fsVisible ? 0 : originRect.right,
-        } : undefined}
+        className="relative flex h-full w-full flex-col overflow-hidden border-y border-border bg-background"
       >
         <div className="flex-1 min-h-0 relative">
           <PreviewCanvas
