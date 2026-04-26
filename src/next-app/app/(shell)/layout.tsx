@@ -14,7 +14,7 @@ import { getGithubStars } from "@shell/lib/github"
 import { branding } from "@shell/lib/branding"
 import { registry } from "@shell/registry.config"
 import { getShellDefaultLocale, getShellLocales } from "@shell/lib/locales"
-import "./globals.css"
+import "../globals.css"
 
 const shellLocales = getShellLocales()
 const shellDefaultLocale = getShellDefaultLocale() || "en"
